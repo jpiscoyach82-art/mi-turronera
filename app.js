@@ -597,7 +597,7 @@ $('dashNewPlan').onclick=()=>show('plan');
 $('back').onclick=()=>show('history');
 function show(v,nav=true){
  document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id===v));
- if(v==='history')renderHistory();if(v==='dashboard')renderDashboard();if(v==='settings')loadSettingsView();
+ if(v==='history')renderHistory();if(v==='dashboard')renderDashboard();if(v==='settings'){loadSettingsView();renderAudit();}
  if(nav)document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
  scrollTo(0,0);
 }
@@ -619,6 +619,8 @@ window.applyRoleUI=function(role){
  ['settingsSavePrices','backupAll','importBackup','clearBusinessData','factoryReset'].forEach(id=>{const el=$(id);if(el){const wrap=id==='importBackup'?el.closest('.importLabel'):el;wrap.style.display=admin?'':'none'}});
  const settings=document.querySelector('#settings .dashhero .hint');if(settings&&!admin)settings.textContent='Configuración administrada por el propietario del negocio.';
 };
+async function renderAudit(){const box=$('auditList');if(!box||!window.TurroneraCloud?.isReady())return;try{const rows=await window.TurroneraCloud.audit(30);if(!rows.length){box.innerHTML='<p class="hint">Aún no hay actividad registrada.</p>';return}box.innerHTML=rows.map(x=>{const code=x.new_data?.code||x.old_data?.code||'Turronera';const label=x.action==='INSERT'?'Creada':x.action==='UPDATE'?'Actualizada':x.action==='DELETE'?'Eliminada':x.action;return '<div class="auditRow"><div><b>'+esc(code)+'</b><small>'+label+'</small></div><time>'+new Date(x.changed_at).toLocaleString('es-PE')+'</time></div>'}).join('')}catch(e){box.innerHTML='<p class="hint">No se pudo cargar la actividad.</p>'}}
+
 function loadSettingsView(){
  $('settings-price-k1').value=PRICE.k1.toFixed(2);
  $('settings-price-k05').value=PRICE.k05.toFixed(2);
@@ -674,12 +676,11 @@ $('importBackup').onchange=async e=>{
  e.target.value='';
 };
 
-$('clearBusinessData').onclick=()=>{
- if(!confirm('¿Borrar todas las turroneras, clientes, pagos y agenda? Los precios se conservarán.'))return;
- if(!confirm('Confirmación final: ¿seguro que deseas borrar todos los datos del negocio?'))return;
- setHist([]);
- alert('Datos del negocio eliminados.');
- renderDashboard();renderHistory();
+$('clearBusinessData').onclick=async()=>{
+ if(!window.TurroneraCloud?.isAdmin()){alert('Solo el administrador puede enviar datos a la papelera.');return}
+ if(!confirm('¿Enviar todas las turroneras y clientes a la papelera de la nube? Los precios se conservarán.'))return;
+ if(!confirm('Confirmación final: esta acción afectará a todos los dispositivos.'))return;
+ try{await window.TurroneraCloud.trashAll();alert('Datos enviados a la papelera de forma segura.');renderDashboard();renderHistory()}catch(e){alert('No se pudo completar: '+(e?.message||e))}
 };
 
 $('factoryReset').onclick=()=>{
