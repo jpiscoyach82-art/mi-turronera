@@ -468,6 +468,8 @@ function renderClientSummary(records){
  }).join(''):'<p class="hint">No hay clientes para este filtro.</p>')+'</div>';
  box.querySelectorAll('.clientFilter').forEach(b=>b.onclick=()=>{window.clientFilter=b.dataset.f;renderHistory()});
 }
+function renderAgenda(mode='agenda'){const panel=$('agendaPanel'),summary=$('clientSummary'),list=$('historyList');if(!panel)return;summary.style.display='none';list.innerHTML='';panel.style.display='block';const items=[];for(const r of hist()){const rp=recordPrices(r);for(const p0 of (r.pieces||[])){const p=normalizePiece(p0),price=piecePrice(p,rp),paid=Math.min(piecePaid(p),price),bal=Math.max(0,price-paid);if(!p.client)continue;if(mode==='agenda'&&p.deliveryDate&&p.status!=='entregado')items.push({r,p,price,bal});if(mode==='debt'&&bal>.001)items.push({r,p,price,bal})}}items.sort((a,b)=>mode==='agenda'?(a.p.deliveryDate||'9999').localeCompare(b.p.deliveryDate||'9999'):b.bal-a.bal);panel.innerHTML='<div class="clientSummaryCard"><h3>'+(mode==='agenda'?'Agenda de entregas':'Cartera por cobrar')+'</h3>'+(items.length?items.map(x=>{const phone=cleanPhone(x.p.phone||''),date=x.p.deliveryDate?new Date(x.p.deliveryDate+'T00:00:00').toLocaleDateString('es-PE'):'Sin fecha';const msg=mode==='debt'?'Hola '+x.p.client+', te recordamos que tienes un saldo pendiente de '+money(x.bal)+' por tu pedido de Dulces Momentos.':'Hola '+x.p.client+', te confirmamos tu entrega de Dulces Momentos para el '+date+'.';return '<article class="agendaRow"><div><b>'+esc(x.p.client)+'</b><small>'+esc(x.r.code)+' · '+date+'</small></div><div><strong>'+money(x.bal)+'</strong>'+(phone?'<a class="miniWa" target="_blank" rel="noopener" href="https://wa.me/'+phone+'?text='+encodeURIComponent(msg)+'">WhatsApp</a>':'')+'</div></article>'}).join(''):'<p class="hint">No hay registros pendientes.</p>')+'</div>'}
+function setCommercialMode(mode){historyMode=mode;const a=$('historyAgendaTab'),d=$('historyDebtTab'),ct=$('historyClientsTab'),tt=$('historyTurronerasTab');[a,d,ct,tt].forEach(x=>x&&x.classList.remove('active'));if(mode==='agenda'){a.classList.add('active');renderAgenda('agenda')}else if(mode==='debt'){d.classList.add('active');renderAgenda('debt')}}
 let historyMode='clients';
 function setHistoryMode(mode){
  historyMode=mode;
@@ -478,6 +480,8 @@ function setHistoryMode(mode){
 }
 
 function renderHistory(){
+ if(historyMode==='agenda'){renderAgenda('agenda');return}if(historyMode==='debt'){renderAgenda('debt');return}
+ const panel=$('agendaPanel');if(panel)panel.style.display='none';
  const q=$('search').value.trim().toLowerCase(),list=$('historyList'),summary=$('clientSummary');
  let all=hist().map(r=>({...r,status:r.status||'finalizada',pieces:(r.pieces||[]).map(normalizePiece)}));
 
@@ -518,6 +522,8 @@ function renderHistory(){
 $('search').oninput=renderHistory;
 $('historyClientsTab').onclick=()=>setHistoryMode('clients');
 $('historyTurronerasTab').onclick=()=>setHistoryMode('turroneras');
+$('historyAgendaTab').onclick=()=>setCommercialMode('agenda');
+$('historyDebtTab').onclick=()=>setCommercialMode('debt');
 function statusName(s){return s==='pagado'?'Pagado':s==='entregado'?'Entregado':'Pendiente'}
 function resumeDraft(code){
  const r=hist().find(x=>x.code===code);if(!r)return;
