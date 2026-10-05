@@ -653,7 +653,7 @@ $('importBackup').onchange=async e=>{
   if(window.TurroneraCloud?.isReady()){await window.TurroneraCloud.pushOfficialBackup(data.history,data.prices||PRICE);}
   alert('Respaldo oficial importado y sincronizado correctamente.');
   loadSettingsView();renderDashboard();renderHistory();
- }catch(err){alert('No se pudo importar el respaldo. Verifica que sea un archivo válido.')}
+ }catch(err){console.error('IMPORT_BACKUP_ERROR',err);alert('Error al importar: '+(err?.message||String(err)))}
  e.target.value='';
 };
 
