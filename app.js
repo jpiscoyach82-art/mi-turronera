@@ -613,6 +613,12 @@ update();
 
 if($('piecePhone'))$('piecePhone').addEventListener('input',updateModalWhatsApp);
 
+
+window.applyRoleUI=function(role){
+ const admin=role==='admin';
+ ['settingsSavePrices','backupAll','importBackup','clearBusinessData','factoryReset'].forEach(id=>{const el=$(id);if(el){const wrap=id==='importBackup'?el.closest('.importLabel'):el;wrap.style.display=admin?'':'none'}});
+ const settings=document.querySelector('#settings .dashhero .hint');if(settings&&!admin)settings.textContent='Configuración administrada por el propietario del negocio.';
+};
 function loadSettingsView(){
  $('settings-price-k1').value=PRICE.k1.toFixed(2);
  $('settings-price-k05').value=PRICE.k05.toFixed(2);
@@ -635,14 +641,14 @@ $('settingsSavePrices').onclick=()=>{
 function exportBackup(){
  const payload={
    app:'Mi Turronera',
-   version:'14',
+   version:'15.1',
    exportedAt:new Date().toISOString(),
    prices:PRICE,
    history:hist()
  };
  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download='respaldo-mi-turronera-v14.json';a.click();URL.revokeObjectURL(url);
+ a.href=url;a.download='respaldo-mi-turronera-v15-1.json';a.click();URL.revokeObjectURL(url);
 }
 $('backupAll').onclick=exportBackup;
 
