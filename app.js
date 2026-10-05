@@ -438,25 +438,36 @@ $('saveDraft').onclick=()=>{
 
 function recordPrices(r){return r&&r.prices?{k1:Number(r.prices.k1||0),k05:Number(r.prices.k05||0),k025:Number(r.prices.k025||0)}:{...DEFAULT_PRICE}}
 function renderClientSummary(records){
- const box=$('clientSummary');
- const groups=new Map();
+ const box=$('clientSummary'),groups=new Map(),today=new Date();today.setHours(0,0,0,0);
+ const kgOf=p=>p.type==='k1'?1:p.type==='k05'?.5:p.type==='k025'?.25:0;
  for(const r of records){
   const rp=recordPrices(r);
   for(const p0 of (r.pieces||[])){
-   const p=normalizePiece(p0);
-   const name=(p.client||'').trim();
-   if(!name)continue;
-   const key=name.toLowerCase();
-   if(!groups.has(key))groups.set(key,{name,items:0,total:0,paid:0,balance:0});
-   const g=groups.get(key),price=piecePrice(p,rp),paid=Math.min(piecePaid(p),price);
-   g.items++;g.total+=price;g.paid+=paid;g.balance+=Math.max(0,price-paid);
+   const p=normalizePiece(p0),name=(p.client||'').trim();if(!name)continue;
+   const phone=cleanPhone(p.phone||''),key=(phone||name.toLowerCase());
+   if(!groups.has(key))groups.set(key,{name,phone,items:0,kg:0,total:0,paid:0,balance:0,last:null,next:null,pending:0,delivered:0});
+   const g=groups.get(key),price=piecePrice(p,rp),paid=Math.min(piecePaid(p),price),rd=new Date(r.date);
+   g.items++;g.kg+=kgOf(p);g.total+=price;g.paid+=paid;g.balance+=Math.max(0,price-paid);
+   if(p.status==='entregado')g.delivered++;else g.pending++;
+   if(!g.last||rd>g.last)g.last=rd;
+   if(p.deliveryDate){const d=new Date(p.deliveryDate+'T00:00:00');if(d>=today&&(!g.next||d<g.next))g.next=d}
+   if(!g.phone&&phone)g.phone=phone;
   }
  }
- if(!groups.size){box.innerHTML='';return}
- const arr=[...groups.values()].sort((a,b)=>b.balance-a.balance||a.name.localeCompare(b.name));
- box.innerHTML=`<div class="clientSummaryCard"><h3>Resumen por cliente</h3>${arr.map(g=>`<div class="clientSummaryRow"><div class="row"><div><b>${esc(g.name)}</b><small>${g.items} pieza${g.items===1?'':'s'} · Total ${money(g.total)}</small></div><div class="clientMoney"><div class="paid">Pagó ${money(g.paid)}</div><div class="due">Saldo ${money(g.balance)}</div></div></div></div>`).join('')}</div>`;
+ let arr=[...groups.values()];
+ const filter=window.clientFilter||'all';
+ if(filter==='debt')arr=arr.filter(g=>g.balance>.001);
+ if(filter==='delivery')arr=arr.filter(g=>g.next);
+ if(filter==='frequent')arr=arr.filter(g=>g.items>=2);
+ arr.sort((a,b)=>b.balance-a.balance||b.items-a.items||a.name.localeCompare(b.name));
+ if(!groups.size){box.innerHTML='<p class="hint">No hay clientes registrados todavía.</p>';return}
+ const chips='<div class="clientFilters">'+[['all','Todos'],['debt','Con saldo'],['delivery','Próximas entregas'],['frequent','Frecuentes']].map(([k,l])=>'<button class="clientFilter '+(filter===k?'active':'')+'" data-f="'+k+'">'+l+'</button>').join('')+'</div>';
+ box.innerHTML=chips+'<div class="clientSummaryCard"><div class="clientHead"><h3>Clientes</h3><small>'+groups.size+' registrados</small></div>'+(arr.length?arr.map(g=>{
+   const wa=g.phone?'https://wa.me/'+g.phone:'';
+   return '<article class="clientCard"><div class="clientTop"><div><b>'+esc(g.name)+'</b><small>'+(g.phone?esc(g.phone):'Sin celular')+'</small></div><span class="'+(g.balance>0?'debtBadge':'okBadge')+'">'+(g.balance>0?'Debe '+money(g.balance):'Al día')+'</span></div><div class="clientStats"><span><b>'+g.items+'</b> pedidos</span><span><b>'+g.kg.toFixed(2)+'</b> kg</span><span><b>'+money(g.total)+'</b> comprado</span></div><div class="clientMoneyLine"><span>Pagó <b>'+money(g.paid)+'</b></span><span>Saldo <b>'+money(g.balance)+'</b></span></div><div class="clientDates"><small>Última compra: '+(g.last?g.last.toLocaleDateString('es-PE'):'—')+'</small><small>Próxima entrega: '+(g.next?g.next.toLocaleDateString('es-PE'):'—')+'</small></div>'+(wa?'<a class="whatsappbtn clientWa" href="'+wa+'" target="_blank" rel="noopener">WhatsApp</a>':'')+'</article>'
+ }).join(''):'<p class="hint">No hay clientes para este filtro.</p>')+'</div>';
+ box.querySelectorAll('.clientFilter').forEach(b=>b.onclick=()=>{window.clientFilter=b.dataset.f;renderHistory()});
 }
-
 let historyMode='clients';
 function setHistoryMode(mode){
  historyMode=mode;
