@@ -612,7 +612,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
 });
 $('export').onclick=()=>{
  const blob=new Blob([JSON.stringify(hist(),null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=u;a.download='historial-mi-turronera-v14-1-4.json';a.click();URL.revokeObjectURL(u);
+ a.href=u;a.download='historial-mi-turronera-v15-4.json';a.click();URL.revokeObjectURL(u);
 };
 update();
 
@@ -621,9 +621,13 @@ if($('piecePhone'))$('piecePhone').addEventListener('input',updateModalWhatsApp)
 
 window.applyRoleUI=function(role){
  const admin=role==='admin';
- ['settingsSavePrices','backupAll','importBackup','clearBusinessData','factoryReset'].forEach(id=>{const el=$(id);if(el){const wrap=id==='importBackup'?el.closest('.importLabel'):el;wrap.style.display=admin?'':'none'}});
+ ['settingsSavePrices','backupAll','importBackup','clearBusinessData','factoryReset','trashCard','togglePrices','savePrices'].forEach(id=>{const el=$(id);if(el){const wrap=id==='importBackup'?el.closest('.importLabel'):el;wrap.style.display=admin?'':'none'}});
  const settings=document.querySelector('#settings .dashhero .hint');if(settings&&!admin)settings.textContent='Configuración administrada por el propietario del negocio.';
 };
+
+async function renderTrash(){const box=$('trashList');if(!box||!window.TurroneraCloud?.isAdmin())return;box.innerHTML='<p class="hint">Cargando…</p>';try{const rows=await window.TurroneraCloud.trashList();box.innerHTML=rows.length?rows.map(r=>'<div class="trashRow"><div><b>'+esc(r.code||'Turronera')+'</b><small>Eliminada '+new Date(r.deleted_at).toLocaleString('es-PE')+'</small></div><button class="secondary restoreBtn" data-restore="'+r.id+'">Restaurar</button></div>').join(''):'<p class="hint">La papelera está vacía.</p>';box.querySelectorAll('[data-restore]').forEach(b=>b.onclick=async()=>{if(!confirm('¿Restaurar esta turronera?'))return;await window.TurroneraCloud.restore(b.dataset.restore);await renderTrash();renderDashboard();renderHistory()})}catch(e){box.innerHTML='<p class="hint">No se pudo cargar la papelera.</p>'}}
+if($('refreshTrash'))$('refreshTrash').onclick=renderTrash;
+
 async function renderAudit(){const box=$('auditList');if(!box||!window.TurroneraCloud?.isReady())return;try{const rows=await window.TurroneraCloud.audit(30);if(!rows.length){box.innerHTML='<p class="hint">Aún no hay actividad registrada.</p>';return}box.innerHTML=rows.map(x=>{const code=x.new_data?.code||x.old_data?.code||'Turronera';const label=x.action==='INSERT'?'Creada':x.action==='UPDATE'?'Actualizada':x.action==='DELETE'?'Eliminada':x.action;return '<div class="auditRow"><div><b>'+esc(code)+'</b><small>'+label+'</small></div><time>'+new Date(x.changed_at).toLocaleString('es-PE')+'</time></div>'}).join('')}catch(e){box.innerHTML='<p class="hint">No se pudo cargar la actividad.</p>'}}
 
 function loadSettingsView(){
@@ -648,14 +652,14 @@ $('settingsSavePrices').onclick=()=>{
 function exportBackup(){
  const payload={
    app:'Mi Turronera',
-   version:'15.1',
+   version:'15.4',
    exportedAt:new Date().toISOString(),
    prices:PRICE,
    history:hist()
  };
  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download='respaldo-mi-turronera-v15-1.json';a.click();URL.revokeObjectURL(url);
+ a.href=url;a.download='respaldo-mi-turronera-v15-4.json';a.click();URL.revokeObjectURL(url);
 }
 $('backupAll').onclick=exportBackup;
 
