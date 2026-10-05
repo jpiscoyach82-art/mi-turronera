@@ -1,0 +1,168 @@
+<!doctype html><html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#713512"><title>Mi Turronera V15</title>
+<link rel="manifest" href="manifest.json"><link rel="stylesheet" href="styles.css"></head>
+<body><div id="authGate" class="authGate"><div class="authCard"><img src="logo-dulces-momentos.svg" class="authLogo"><h2>Mi Turronera</h2><p>Acceso privado · Dulces Momentos</p><input id="authEmail" type="email" inputmode="email" placeholder="Correo autorizado"><button id="authSend" class="primary">Enviar enlace de acceso</button><p id="authMsg" class="hint">Solo los correos autorizados pueden ingresar.</p></div></div><div class="app"><header>
+      <div class="brandhead">
+        <img src="logo-dulces-momentos.svg" alt="Dulces Momentos" class="brandlogo">
+        <div>
+          <small>DULCES MOMENTOS</small>
+          <h1>Mi Turronera</h1>
+          <p>Planificador inteligente · 9 kg · V15 Multiusuario</p>
+        </div><div class="syncbox"><span id="syncDot" class="syncdot"></span><span id="syncText">Conectando…</span><button id="signOut" class="linkbtn syncLogout" style="display:none">Salir</button></div>
+      </div>
+    </header>
+<main>
+<section id="dashboard" class="view active">
+  <div class="dashhero">
+    <div>
+      <span class="dashlabel">RESUMEN DEL NEGOCIO</span>
+      <h2>Panel de control</h2>
+      <p class="hint">Información compartida y sincronizada entre los dispositivos autorizados.</p>
+    </div>
+  </div>
+
+  <div class="dashgrid">
+    <div class="dashcard"><span>Turroneras</span><b id="dashTurroneras">0</b><small>registradas</small></div>
+    <div class="dashcard"><span>Venta total</span><b id="dashVenta">S/ 0.00</b><small>valor producido</small></div>
+    <div class="dashcard"><span>Cobrado</span><b id="dashCobrado">S/ 0.00</b><small>pagos registrados</small></div>
+    <div class="dashcard"><span>Por cobrar</span><b id="dashPendiente">S/ 0.00</b><small>saldo pendiente</small></div>
+  </div>
+
+  <div class="dashsection">
+    <h3>Estado de piezas</h3>
+    <div class="statusdash">
+      <div><b id="dashPiecesPending">0</b><span>Pendientes</span></div>
+      <div><b id="dashPiecesPaid">0</b><span>Pagadas</span></div>
+      <div><b id="dashPiecesDelivered">0</b><span>Entregadas</span></div>
+    </div>
+  </div>
+
+  <div class="dashsection">
+    <div class="row"><h3>Clientes con saldo</h3><span id="dashDebtClients" class="debtbadge">0</span></div>
+    <div id="dashDebtors"></div>
+  </div>
+
+  
+<div class="dashsection"><h3>Agenda de pedidos</h3>
+<div class="agendagrid">
+<button class="agendacard" data-agenda="today"><b id="dashToday">0</b><span>Para hoy</span></button>
+<button class="agendacard" data-agenda="tomorrow"><b id="dashTomorrow">0</b><span>Para mañana</span></button>
+<button class="agendacard" data-agenda="delivery"><b id="dashDeliveryPending">0</b><span>Por entregar</span></button>
+<button class="agendacard" data-agenda="payment"><b id="dashPaymentPending">0</b><span>Por cobrar</span></button>
+</div><div id="agendaList"></div></div>
+<div class="dashsection"><h3>Reporte de ventas</h3>
+<div class="reportgrid">
+<div><span>Hoy</span><b id="reportTodaySales">S/ 0.00</b><small>venta</small></div>
+<div><span>Hoy cobrado</span><b id="reportTodayPaid">S/ 0.00</b><small>cobrado</small></div>
+<div><span>Últimos 7 días</span><b id="reportWeekSales">S/ 0.00</b><small>venta</small></div>
+<div><span>7 días cobrado</span><b id="reportWeekPaid">S/ 0.00</b><small>cobrado</small></div>
+</div></div>
+<div class="dashsection">
+    <h3>Producción por presentación</h3>
+    <div class="prodgrid">
+      <div><span>1 kg</span><b id="dashK1">0</b></div>
+      <div><span>1/2 kg</span><b id="dashK05">0</b></div>
+      <div><span>1/4 kg</span><b id="dashK025">0</b></div>
+    </div>
+  </div>
+
+  <button id="dashNewPlan" class="primary">+ Nueva turronera</button>
+</section>
+
+<section id="plan" class="view">
+<div class="summary card"><div><span>Turronera</span><b>9.00 kg</b></div><div><span>Estado</span><b id="stateLabel">Sin completar</b></div></div>
+<h2>1. Define las piezas</h2>
+<div class="selectors">
+<div class="sel"><b>1 kg</b><div><button data-t="k1" data-d="-1">−</button><strong id="n-k1">0</strong><button data-t="k1" data-d="1">+</button></div></div>
+<div class="sel"><b>1/2 kg</b><div><button data-t="k05" data-d="-1">−</button><strong id="n-k05">0</strong><button data-t="k05" data-d="1">+</button></div></div>
+<div class="sel"><b>1/4 kg</b><div><button data-t="k025" data-d="-1">−</button><strong id="n-k025">0</strong><button data-t="k025" data-d="1">+</button></div></div>
+</div>
+<div class="quickrow"><button id="example" class="linkbtn">Ejemplo 3 / 6 / 12</button><button id="reorganize" class="linkbtn">↻ Reorganizar mapa</button></div><div id="status" class="status">Faltan 9.00 kg por asignar.</div>
+
+
+<h2>2. Mapa de corte</h2><p class="hint">La app prioriza cortes rectos y agrupa piezas del mismo tamaño. Toca una pieza para asignar cliente y comentario.</p>
+<div id="board" class="board"><div class="empty">Agrega piezas para crear el mapa.</div></div>
+<div class="legend"><span>🟨 1 kg</span><span>🟩 1/2 kg</span><span>🟪 1/4 kg</span></div>
+<div class="pricepanel">
+  <div class="row"><div><b>Precios de venta</b><p class="hint">Se aplican a nuevas turroneras.</p></div><button id="togglePrices" class="linkbtn">Editar</button></div>
+  <div id="priceEditor" class="pricegrid hidden">
+    <label>1 kg<input id="price-k1" type="number" min="0" step="0.50" inputmode="decimal"></label>
+    <label>1/2 kg<input id="price-k05" type="number" min="0" step="0.50" inputmode="decimal"></label>
+    <label>1/4 kg<input id="price-k025" type="number" min="0" step="0.50" inputmode="decimal"></label>
+    <button id="savePrices" class="primary priceSave">Guardar precios</button>
+  </div>
+</div>
+<div class="salescard">
+  <div><span>Venta potencial</span><b id="potentialSales">S/ 0.00</b></div>
+  <div><span>Cobrado</span><b id="paidSales">S/ 0.00</b></div>
+  <div><span>Por cobrar</span><b id="pendingSales">S/ 0.00</b></div>
+</div>
+<h2>3. Comentario general</h2><textarea id="general" placeholder="Observaciones generales..."></textarea>
+<button id="saveDraft" class="secondary">Guardar avance</button><button id="save" class="primary" disabled>Finalizar turronera</button><p class="versiontag">Versión 15 · Multiusuario</p><button id="clear" class="secondary">Limpiar</button>
+</section>
+<section id="history" class="view"><div class="row"><h2>Historial</h2><button id="export" class="linkbtn">Exportar</button></div><div class="historyTabs">
+  <button id="historyClientsTab" class="active">Clientes</button>
+  <button id="historyTurronerasTab">Turroneras</button>
+</div>
+<input id="search" placeholder="Buscar cliente, código o comentario">
+<div id="clientSummary"></div>
+<div id="historyList"></div></section>
+
+<section id="settings" class="view">
+  <div class="dashhero">
+    <span class="dashlabel">CONFIGURACIÓN</span>
+    <h2>Ajustes de la aplicación</h2>
+    <p class="hint">Precios, respaldos y limpieza de datos.</p>
+  </div>
+
+  <div class="settingsCard">
+    <h3>Precios de venta</h3>
+    <div class="settingsPriceGrid">
+      <label>1 kg<input id="settings-price-k1" type="number" min="0" step="0.50" inputmode="decimal"></label>
+      <label>1/2 kg<input id="settings-price-k05" type="number" min="0" step="0.50" inputmode="decimal"></label>
+      <label>1/4 kg<input id="settings-price-k025" type="number" min="0" step="0.50" inputmode="decimal"></label>
+    </div>
+    <button id="settingsSavePrices" class="primary">Guardar precios</button>
+  </div>
+
+  <div class="settingsCard">
+    <h3>Respaldo</h3>
+    <p class="hint">Guarda todos los datos en un archivo para restaurarlos después.</p>
+    <button id="backupAll" class="secondary">Exportar respaldo completo</button>
+    <label class="importLabel">Importar respaldo
+      <input id="importBackup" type="file" accept="application/json,.json">
+    </label>
+  </div>
+
+  <div class="settingsCard dangerZone">
+    <h3>Limpieza de datos</h3>
+    <p class="hint">Estas acciones no se pueden deshacer si no tienes un respaldo.</p>
+    <button id="clearBusinessData" class="dangerBtn">Borrar turroneras y clientes</button>
+    <button id="factoryReset" class="dangerBtn strongDanger">Restablecer aplicación completa</button>
+  </div>
+</section>
+
+<section id="detail" class="view"><button id="back" class="linkbtn">← Volver</button><p class="hint">En el mapa, toca una pieza para editarla.</p><div id="detailBody"></div></section>
+</main><nav class="nav4">
+      <button data-v="dashboard" class="active">▦<span>Resumen</span></button>
+      <button data-v="plan">▣<span>Planificar</span></button>
+      <button data-v="history">◷<span>Historial</span></button>
+      <button data-v="settings">⚙<span>Ajustes</span></button>
+    </nav></div>
+<div id="modal" class="modal hidden"><div class="sheet"><div class="row"><h2 id="pieceTitle">Pieza</h2><button id="close" class="x">×</button></div><label>Cliente / persona</label><input id="client" placeholder="Ej.: María Pérez">
+<label>Celular / WhatsApp</label>
+<input id="piecePhone" type="tel" inputmode="tel" placeholder="Ej.: 987654321"><label>Comentario de este corte</label><textarea id="pieceNote" placeholder="Ej.: Recoge a las 5 pm, observaciones..."></textarea><label>Fecha de entrega</label><input id="pieceDeliveryDate" type="date">
+<div class="moneybox">
+  <div><span>Precio</span><b id="piecePrice">S/ 0.00</b></div>
+  <div><span>Saldo</span><b id="pieceBalance">S/ 0.00</b></div>
+</div>
+<label>Monto pagado</label>
+<input id="piecePaid" type="number" min="0" step="0.50" inputmode="decimal" placeholder="0.00">
+<label>Estado del pedido</label>
+<div class="statuschoices">
+  <button type="button" data-status="pendiente" class="statuschoice">Pendiente</button>
+  <button type="button" data-status="pagado" class="statuschoice">Pagado</button>
+  <button type="button" data-status="entregado" class="statuschoice">Entregado</button>
+</div><button id="pieceSave" class="primary">Guardar en esta pieza</button><button id="pieceClear" class="secondary">Quitar cliente y comentario</button></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="sync.js"></script><script src="app.js"></script></body></html>
