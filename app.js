@@ -283,7 +283,7 @@ function updateModalWhatsApp(){
  let btn=document.getElementById('modalWhatsapp');
  if(!btn){
   btn=document.createElement('a');btn.id='modalWhatsapp';btn.className='whatsappbtn';
-  btn.textContent='Enviar por WhatsApp';
+  btn.textContent='💬 Confirmar pedido por WhatsApp';
   const save=$('pieceSave');save.parentNode.insertBefore(btn,save);
  }
  const p=getEditingPiece();
@@ -291,7 +291,7 @@ function updateModalWhatsApp(){
   btn.style.display='none';btn.removeAttribute('href');return;
  }
  const priceTable=editContext==='saved'?recordPrices(savedRecordDraft):PRICE;
- btn.href=whatsappUrl(p,priceTable,editContext==='saved'?savedRecordCode:'');btn.onclick=(e)=>{e.preventDefault();openWhatsApp(btn.href)};
+ btn.href=whatsappUrl(p,priceTable,editContext==='saved'?savedRecordCode:'','confirm');btn.onclick=(e)=>{e.preventDefault();openWhatsApp(btn.href)};
  btn.style.display='flex';
 }
 
@@ -559,12 +559,14 @@ function cleanPhone(phone){
  if(n.length===9)n='51'+n;
  return n;
 }
-function whatsappUrl(p,priceTable,code){
+function whatsappUrl(p,priceTable,code,kind='confirm'){
  const phone=cleanPhone(p.phone);if(!phone)return '';
- const price=piecePrice(p,priceTable),paid=Math.min(piecePaid(p),price),balance=Math.max(0,price-paid);
- let msg=`Hola ${p.client||''}, te escribimos de Dulces Momentos por tu pedido de turrón ${L[p.type]}.`;
- if(p.deliveryDate)msg+=` Fecha de entrega: ${p.deliveryDate}.`;
- msg+=` Total: ${money(price)}. Pagado: ${money(paid)}. Saldo: ${money(balance)}.`;
+ const price=piecePrice(p,priceTable),paid=Math.min(piecePaid(p),price),balance=Math.max(0,price-paid),name=p.client||'';
+ const date=p.deliveryDate?new Date(p.deliveryDate+'T00:00:00').toLocaleDateString('es-PE'):'por coordinar';
+ let msg='';
+ if(kind==='debt')msg=`Hola ${name} 😊 Te escribimos de Dulces Momentos. Tu pedido de turrón ${L[p.type]} tiene un saldo pendiente de ${money(balance)}. Total: ${money(price)} · Pagado: ${money(paid)}. Gracias por tu preferencia 💜`;
+ else if(kind==='ready')msg=`Hola ${name} 😊 ¡Tu turrón ${L[p.type]} de Dulces Momentos está listo! Tu entrega está programada para ${date}. Saldo pendiente: ${money(balance)}. ¡Te esperamos! 💜`;
+ else msg=`Hola ${name} 😊 Confirmamos tu pedido de turrón ${L[p.type]} en Dulces Momentos. Entrega: ${date}. Total: ${money(price)} · Pagado: ${money(paid)} · Saldo: ${money(balance)}.`;
  if(code)msg+=` Pedido: ${code}.`;
  return `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
 }
