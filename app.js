@@ -512,9 +512,9 @@ function renderHistory(){
    <div class="chips"><span class="chip">1 kg: ${(r.counts||{}).k1||0}</span><span class="chip">1/2: ${(r.counts||{}).k05||0}</span><span class="chip">1/4: ${(r.counts||{}).k025||0}</span><span class="chip">${kg} kg</span></div>
    <div class="salesline"><span class="salespill">Cobrado: ${money(st.paid)}</span><span class="salespill">Por cobrar: ${money(st.pending)}</span></div>
    <button class="linkbtn viewDetail">Ver mapa, clientes y pagos</button>
-   ${draft?'<button class="resumeBtn">Continuar corte</button>':''}`;
+   ${draft?'<button class="resumeBtn">Continuar corte</button>':''}${window.TurroneraCloud?.isAdmin()?'<button class="trashOneBtn dangerMini">Enviar a papelera</button>':''}`;
    card.querySelector('.viewDetail').onclick=()=>detail(r.code);
-   const rb=card.querySelector('.resumeBtn');if(rb)rb.onclick=()=>resumeDraft(r.code);
+   const rb=card.querySelector('.resumeBtn');if(rb)rb.onclick=()=>resumeDraft(r.code);const tb=card.querySelector('.trashOneBtn');if(tb)tb.onclick=async()=>{if(!confirm('¿Enviar '+r.code+' a la papelera? Podrás restaurarla después.'))return;const live=hist().find(x=>x.code===r.code);if(!live?._cloudId){alert('Espera a que termine de sincronizar antes de borrar.');return}try{await window.TurroneraCloud.trashOne(live._cloudId);renderHistory();renderDashboard();alert(r.code+' fue enviada a la papelera.')}catch(e){alert('No se pudo borrar: '+e.message)}};
    list.appendChild(card);
  }
 }
