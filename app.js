@@ -6,7 +6,7 @@ const total=()=>counts.k1+counts.k05*.5+counts.k025*.25;
 const esc=s=>(s||"").replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#039;'}[c]));
 
 function newPiece(t){return{id:Date.now()+'-'+Math.random(),type:t,client:'',note:'',status:'pendiente',paid:0,deliveryDate:'',phone:''}}
-function normalizePiece(p){if(!p.status)p.status='pendiente';if(p.client==null)p.client='';if(p.note==null)p.note='';if(p.paid==null||isNaN(Number(p.paid)))p.paid=0;p.paid=Number(p.paid);if(p.deliveryDate==null)p.deliveryDate='';if(p.phone==null)p.phone='';return p}
+function normalizePiece(p){if(!p.status||p.status==='pagado')p.status='pendiente';if(p.client==null)p.client='';if(p.note==null)p.note='';if(p.paid==null||isNaN(Number(p.paid)))p.paid=0;p.paid=Number(p.paid);if(p.deliveryDate==null)p.deliveryDate='';if(p.phone==null)p.phone='';return p}
 
 function sync(){
  const old={};
@@ -332,7 +332,7 @@ $('piecePaid').oninput=()=>{
  const p=getEditingPiece();if(!p)return;
  const priceTable=editContext==='saved'?recordPrices(savedRecordDraft):PRICE;
  p.paid=Math.max(0,Number($('piecePaid').value)||0);
- if(p.status!=='entregado')p.status=piecePaid(p)>=piecePrice(p,priceTable)?'pagado':'pendiente';
+ if(p.status!=='entregado')p.status='pendiente';
  document.querySelectorAll('.statuschoice').forEach(b=>b.classList.toggle('active',b.dataset.status===p.status));
  const bal=Math.max(0,piecePrice(p,priceTable)-piecePaid(p));
  $('piecePrice').textContent=money(piecePrice(p,priceTable));
@@ -344,7 +344,6 @@ document.querySelectorAll('.statuschoice').forEach(b=>b.onclick=()=>{
  const p=getEditingPiece();if(!p)return;
  const priceTable=editContext==='saved'?recordPrices(savedRecordDraft):PRICE;
  p.status=b.dataset.status;
- if(p.status==='pagado'){p.paid=piecePrice(p,priceTable);$('piecePaid').value=piecePaid(p).toFixed(2)}
  document.querySelectorAll('.statuschoice').forEach(x=>x.classList.toggle('active',x===b));
  const bal=Math.max(0,piecePrice(p,priceTable)-piecePaid(p));
  $('piecePrice').textContent=money(piecePrice(p,priceTable));
@@ -359,7 +358,7 @@ $('pieceSave').onclick=()=>{
  p.phone=$('piecePhone').value.trim();
  p.note=$('pieceNote').value.trim();p.deliveryDate=$('pieceDeliveryDate').value||'';
  p.paid=Math.max(0,Number($('piecePaid').value)||0);
- if(p.status!=='entregado')p.status=piecePaid(p)>=piecePrice(p,priceTable)?'pagado':'pendiente';
+ if(p.status!=='entregado')p.status='pendiente';
  if(editContext==='saved'){
   const code=savedRecordCode;
   persistSavedPiece();
@@ -524,7 +523,7 @@ $('historyClientsTab').onclick=()=>setHistoryMode('clients');
 $('historyTurronerasTab').onclick=()=>setHistoryMode('turroneras');
 $('historyAgendaTab').onclick=()=>setCommercialMode('agenda');
 $('historyDebtTab').onclick=()=>setCommercialMode('debt');
-function statusName(s){return s==='pagado'?'Pagado':s==='entregado'?'Entregado':'Pendiente'}
+function statusName(s){return s==='entregado'?'Entregado':'Pendiente'}
 function resumeDraft(code){
  const r=hist().find(x=>x.code===code);if(!r)return;
  counts={k1:(r.counts||{}).k1||0,k05:(r.counts||{}).k05||0,k025:(r.counts||{}).k025||0};
@@ -581,7 +580,7 @@ function dashboardData(){
  const clients=new Map(),agenda=[];
  for(const r of records){const rp=recordPrices(r),st=salesTotals(r.pieces,rp),created=(r.date||'').slice(0,10);sale+=st.potential;paid+=st.paid;k1+=(r.counts||{}).k1||0;k05+=(r.counts||{}).k05||0;k025+=(r.counts||{}).k025||0;
   if(created===today){todaySales+=st.potential;todayPaid+=st.paid} if(created&&created>=weekStart&&created<=today){weekSales+=st.potential;weekPaid+=st.paid}
-  for(const p of r.pieces){if(p.status==='entregado')deliveredPieces++;else if(p.status==='pagado')paidPieces++;else pendingPieces++;
+  for(const p of r.pieces){if(p.status==='entregado')deliveredPieces++;else pendingPieces++;if(piecePaid(p)>=piecePrice(p,rp)&&piecePrice(p,rp)>0)paidPieces++;
    const client=(p.client||'').trim(),price=piecePrice(p,rp),pp=Math.min(piecePaid(p),price),balance=Math.max(0,price-pp);
    if(client){const key=client.toLowerCase();if(!clients.has(key))clients.set(key,{name:client,total:0,paid:0,pieces:0});const g=clients.get(key);g.total+=price;g.paid+=pp;g.pieces++}
    if(client||p.deliveryDate)agenda.push({code:r.code,client:client||'Sin cliente',type:p.type,deliveryDate:p.deliveryDate||'',status:p.status,balance,phone:p.phone||'',priceTable:rp,piece:p});
