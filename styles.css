@@ -354,3 +354,50 @@ nav button.active{
 .clientField{margin-top:0;margin-bottom:16px}
 .clientField label{margin-top:0}
 #client{display:block;width:100%;box-sizing:border-box;min-height:56px;line-height:1.35;padding:14px 16px}
+
+/* ===== V15.3 Mobile polish ===== */
+:root{--safe-b:env(safe-area-inset-bottom,0px);--safe-t:env(safe-area-inset-top,0px)}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:#f3eff7}
+body{min-width:0;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+.app{width:100%;max-width:540px;min-height:100dvh;padding-bottom:calc(82px + var(--safe-b))}
+header{padding:calc(14px + var(--safe-t)) 16px 14px}
+.brandhead{display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center}
+.brandlogo{width:64px!important;height:64px!important;flex-basis:auto!important}
+.brandhead>div:nth-child(2){min-width:0}
+.brandhead small{font-size:10px}.brandhead h1{font-size:23px;line-height:1.05;margin:2px 0}.brandhead p{font-size:11px;line-height:1.25}
+.syncbox{grid-column:1/-1;display:flex;align-items:center;gap:7px;min-width:0;font-size:11px}
+main{padding:14px 12px 18px;overflow:hidden}
+h2{line-height:1.25}
+button,input,textarea{font-size:16px;touch-action:manipulation}
+button{min-height:44px}
+input,textarea{max-width:100%}
+.primary,.secondary{min-height:50px;padding:13px 14px}
+.selectors{gap:7px}.sel{min-width:0;padding:10px 3px}.sel>div{gap:5px}.sel button{width:38px;height:38px;min-height:38px}.sel strong{min-width:22px}
+.quickrow{flex-wrap:wrap}.quickrow>*{flex:1 1 145px}
+.board{max-height:58dvh}
+.legend{flex-wrap:wrap;gap:7px 10px}
+.salescard,.dashgrid,.agendagrid,.reportgrid{min-width:0}
+.dashcard,.dashsection{min-width:0}
+.moneybox>div{min-width:0}.moneybox b{overflow-wrap:anywhere}
+.modal{padding-top:var(--safe-t)}
+.sheet{width:100%;max-width:540px;max-height:calc(100dvh - var(--safe-t));overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:24px 24px 0 0;padding:18px 14px calc(22px + var(--safe-b));scroll-padding-top:18px;scroll-padding-bottom:90px}
+.pieceModalHead{position:sticky;top:-18px;z-index:3;background:#fffdf9;padding:14px 0 8px;margin:0 0 12px}
+.pieceModalHead h2{margin:0}.x{flex:0 0 42px;width:42px;height:42px;min-height:42px}
+.clientField{margin-top:0}.clientField input,#piecePhone,#piecePaid,#pieceDeliveryDate{min-height:52px}
+.statuschoices{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px}
+.statuschoice{min-height:50px;font-size:14px}
+nav.nav4,nav{width:min(540px,100%);grid-template-columns:repeat(4,1fr);padding:7px 5px calc(7px + var(--safe-b));z-index:40;box-shadow:0 -5px 18px rgba(42,33,54,.08)}
+nav button{min-width:0;min-height:48px;padding:4px 2px;border-radius:10px;font-size:18px}nav span{font-size:10px;white-space:nowrap}
+@media(max-width:390px){
+ main{padding-left:10px;padding-right:10px}
+ .brandhead{grid-template-columns:56px minmax(0,1fr)}.brandlogo{width:56px!important;height:56px!important}
+ .brandhead h1{font-size:21px}.brandhead p{font-size:10px}
+ .summary{grid-template-columns:1fr 1fr;padding:12px}.summary b{font-size:17px}
+ .selectors{grid-template-columns:repeat(3,minmax(0,1fr))}.sel b{font-size:13px}.sel strong{font-size:17px}
+ .dashcard{padding:11px}.dashcard b{font-size:18px}
+ .salescard{grid-template-columns:repeat(3,minmax(0,1fr))}.salescard b{font-size:13px}
+}
+@media(max-width:340px){
+ .selectors{grid-template-columns:1fr}.salescard{grid-template-columns:1fr}
+ .dashgrid{grid-template-columns:1fr 1fr}
+}
