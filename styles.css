@@ -347,3 +347,10 @@ nav button.active{
 
 /* V15.2.1: formulario de pieza más cómodo */
 .pieceModalHead{margin-bottom:18px}.clientField{margin-top:6px;margin-bottom:14px}.clientField label{display:block;margin-bottom:8px;font-weight:700}.clientField input{min-height:52px;font-size:16px;padding:12px 14px}.sheet .statuschoices{grid-template-columns:repeat(2,1fr)}
+
+/* V15.2.2: evita que el primer campo quede oculto bajo la parte superior del modal */
+.sheet{max-height:92dvh;overflow-y:auto;overscroll-behavior:contain;padding-top:22px;scroll-padding-top:22px}
+.pieceModalHead{position:relative;min-height:44px;margin-bottom:20px}
+.clientField{margin-top:0;margin-bottom:16px}
+.clientField label{margin-top:0}
+#client{display:block;width:100%;box-sizing:border-box;min-height:56px;line-height:1.35;padding:14px 16px}
