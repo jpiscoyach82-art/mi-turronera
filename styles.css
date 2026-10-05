@@ -401,3 +401,7 @@ nav button{min-width:0;min-height:48px;padding:4px 2px;border-radius:10px;font-s
  .selectors{grid-template-columns:1fr}.salescard{grid-template-columns:1fr}
  .dashgrid{grid-template-columns:1fr 1fr}
 }
+
+/* V15.4 production safety */
+.trashRow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line,#e5d9ef)}
+.trashRow:first-child{border-top:0}.trashRow div{min-width:0}.trashRow small{display:block;color:var(--muted,#6f6878);margin-top:3px}.trashRow .restoreBtn{width:auto;min-width:105px;margin:0;padding:9px 12px}
