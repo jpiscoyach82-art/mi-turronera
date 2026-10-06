@@ -1,6 +1,6 @@
 const W={k1:1,k05:.5,k025:.25},L={k1:"1 kg",k05:"1/2 kg",k025:"1/4 kg"},DEFAULT_PRICE={k1:30,k05:17,k025:9}; let PRICE={...DEFAULT_PRICE};
 const SH={k1:[[2,2]],k05:[[2,1],[1,2]],k025:[[1,1]]};
-let counts={k1:0,k05:0,k025:0},pieces=[],editing=null,layoutSeed=0,editContext='plan',savedRecordCode=null,savedRecordDraft=null,currentDraftCode=null,currentLayoutSnapshot={},pinnedLayout=null;
+let counts={k1:0,k05:0,k025:0},pieces=[],editing=null,multiMode=false,multiIds=new Set(),layoutSeed=0,editContext='plan',savedRecordCode=null,savedRecordDraft=null,currentDraftCode=null,currentLayoutSnapshot={},pinnedLayout=null;
 const $=x=>document.getElementById(x);
 const total=()=>counts.k1+counts.k05*.5+counts.k025*.25;
 const esc=s=>(s||"").replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#039;'}[c]));
@@ -146,11 +146,11 @@ function layout(ps,target,onTap=null){
    if(!q)continue;
    snap[p.id]={r:q.r,c:q.c,h:q.h,w:q.w};
    const b=document.createElement('button'),st=p.status||'pendiente';
-   b.className='piece '+p.type+(p.client||p.note?' assigned':'')+' status-'+st;
+   b.className='piece '+p.type+(p.client||p.note?' assigned':'')+' status-'+st+(multiIds.has(p.id)?' multiselected':'');
    b.style.gridRow=`${q.r+1}/span ${q.h}`;
    b.style.gridColumn=`${q.c+1}/span ${q.w}`;
    b.innerHTML=`<span class="statusdot"></span><span>${L[p.type]}</span>${p.client?`<em>${esc(p.client)}</em>`:''}`;
-   b.onclick=()=>{if(onTap)onTap(p.id);else openPiece(p.id)};
+   b.onclick=()=>{if(onTap)onTap(p.id);else if(multiMode){if(multiIds.has(p.id))multiIds.delete(p.id);else multiIds.add(p.id);renderMultiState();layout(pieces,$('board'));}else openPiece(p.id)};
    target.appendChild(b);
  }
  if(target.id==='board')currentLayoutSnapshot=snap;
@@ -253,6 +253,12 @@ function update(){
 document.querySelectorAll('.sel button').forEach(b=>b.onclick=()=>{pinnedLayout=null;counts[b.dataset.t]=Math.max(0,counts[b.dataset.t]+Number(b.dataset.d));update()});
 $('example').onclick=()=>{pinnedLayout=null;counts={k1:3,k05:6,k025:12};layoutSeed=0;update()};
 $('reorganize').onclick=()=>{pinnedLayout=null;layoutSeed=(layoutSeed+1)%12;layout(pieces,$('board'))};
+function renderMultiState(){const n=multiIds.size;$('multiInfo').style.display=multiMode?'block':'none';$('multiAssign').style.display=multiMode&&n?'inline-flex':'none';$('multiCancel').style.display=multiMode?'inline-flex':'none';$('multiSelect').style.display=multiMode?'none':'inline-flex';$('multiInfo').textContent=n?n+' corte'+(n===1?'':'s')+' seleccionado'+(n===1?'':'s')+'.':'Toca los cortes que pertenecen al mismo cliente.';}
+function endMulti(){multiMode=false;multiIds.clear();renderMultiState();layout(pieces,$('board'))}
+$('multiSelect').onclick=()=>{multiMode=true;multiIds.clear();renderMultiState()};
+$('multiCancel').onclick=endMulti;
+$('multiAssign').onclick=()=>{if(!multiIds.size)return;const first=pieces.find(p=>multiIds.has(p.id));if(!first)return;editing=first.id;openPiece(first.id);$('pieceTitle').textContent='Asignar cliente · '+multiIds.size+' cortes';};
+
 $('clear').onclick=()=>{counts={k1:0,k05:0,k025:0};pieces=[];currentDraftCode=null;pinnedLayout=null;$('general').value='';update()};
 
 
@@ -358,6 +364,7 @@ $('pieceSave').onclick=()=>{
  p.phone=$('piecePhone').value.trim();
  p.note=$('pieceNote').value.trim();p.deliveryDate=$('pieceDeliveryDate').value||'';
  p.paid=Math.max(0,Number($('piecePaid').value)||0);
+ if(editContext==='plan'&&multiMode&&multiIds.size){for(const q of pieces){if(!multiIds.has(q.id)||q.id===p.id)continue;q.client=p.client;q.phone=p.phone;q.note=p.note;q.deliveryDate=p.deliveryDate;} }
  if(p.status!=='entregado')p.status='pendiente';
  if(editContext==='saved'){
   const code=savedRecordCode;
@@ -367,7 +374,7 @@ $('pieceSave').onclick=()=>{
   detail(code);
  }else{
   $('modal').classList.add('hidden');
-  layout(pieces,$('board'));refreshSales();
+  if(multiMode)endMulti(); else layout(pieces,$('board'));refreshSales();
  }
 };
 $('pieceClear').onclick=()=>{
