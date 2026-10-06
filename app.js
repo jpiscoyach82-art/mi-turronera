@@ -210,7 +210,7 @@ function refreshSales(){
  $('pendingSales').textContent=money(t.pending);
 }
 function refreshPieceMoney(){
- const p=pieces.find(x=>x.id===editing);if(!p)return;
+ const p=getEditingPiece?getEditingPiece():pieces.find(x=>x.id===editing);if(!p)return;
  normalizePiece(p);
  const bal=pieceBalance(p);
  $('piecePrice').textContent=money(piecePrice(p));
@@ -301,13 +301,14 @@ function updateModalWhatsApp(){
  btn.style.display='flex';
 }
 
+function setPaidFullState(p,priceTable=PRICE){const c=$('piecePaidFull');if(c)c.checked=Math.abs(piecePaid(p)-piecePrice(p,priceTable))<0.001&&piecePrice(p,priceTable)>0}
 function openPiece(id){
  editContext='plan';savedRecordCode=null;savedRecordDraft=null;editing=id;
  const p=getEditingPiece();if(!p)return;
  normalizePiece(p);
  const n=pieces.filter(x=>x.type===p.type).findIndex(x=>x.id===id)+1;
  $('pieceTitle').textContent=`${L[p.type]} · pieza ${n}`;
- $('client').value=p.client;$('piecePhone').value=p.phone||'';$('pieceNote').value=p.note;$('pieceDeliveryDate').value=p.deliveryDate||'';$('piecePaid').value=piecePaid(p).toFixed(2);refreshPieceMoney();
+ $('client').value=p.client;$('piecePhone').value=p.phone||'';$('pieceNote').value=p.note;$('pieceDeliveryDate').value=p.deliveryDate||'';$('piecePaid').value=piecePaid(p).toFixed(2);setPaidFullState(p,PRICE);refreshPieceMoney();
  document.querySelectorAll('.statuschoice').forEach(b=>b.classList.toggle('active',b.dataset.status===p.status));
  $('modal').classList.remove('hidden');updateModalWhatsApp();
 }
@@ -324,7 +325,7 @@ function openSavedPiece(code,id){
  $('piecePhone').value=p.phone||'';
  $('pieceNote').value=p.note;
  $('pieceDeliveryDate').value=p.deliveryDate||'';$('piecePaid').value=piecePaid(p).toFixed(2);
- const priceTable=recordPrices(savedRecordDraft);
+ const priceTable=recordPrices(savedRecordDraft);setPaidFullState(p,priceTable);
  $('piecePrice').textContent=money(piecePrice(p,priceTable));
  const bal=Math.max(0,piecePrice(p,priceTable)-piecePaid(p));
  $('pieceBalance').textContent=money(bal);
@@ -346,6 +347,8 @@ $('piecePaid').oninput=()=>{
  $('pieceBalance').className=bal>0?'moneydue':'moneygood';
  if(editContext==='plan')refreshSales();
 };
+$('piecePaidFull').onchange=()=>{const p=getEditingPiece();if(!p)return;const pt=editContext==='saved'?recordPrices(savedRecordDraft):PRICE;if($('piecePaidFull').checked)$('piecePaid').value=piecePrice(p,pt).toFixed(2);p.paid=Math.max(0,Number($('piecePaid').value)||0);const bal=Math.max(0,piecePrice(p,pt)-piecePaid(p));$('pieceBalance').textContent=money(bal);$('pieceBalance').className=bal>0?'moneydue':'moneygood';if(editContext==='plan')refreshSales()};
+$('piecePaid').oninput=()=>{const p=getEditingPiece();if(!p)return;const pt=editContext==='saved'?recordPrices(savedRecordDraft):PRICE;p.paid=Math.max(0,Number($('piecePaid').value)||0);setPaidFullState(p,pt);const bal=Math.max(0,piecePrice(p,pt)-piecePaid(p));$('pieceBalance').textContent=money(bal);$('pieceBalance').className=bal>0?'moneydue':'moneygood';if(editContext==='plan')refreshSales()};
 document.querySelectorAll('.statuschoice').forEach(b=>b.onclick=()=>{
  const p=getEditingPiece();if(!p)return;
  const priceTable=editContext==='saved'?recordPrices(savedRecordDraft):PRICE;
