@@ -427,21 +427,28 @@ async function saveCurrent(status){
  };
  if(idx>=0)h[idx]=rec;else h.unshift(rec);
  setHist(h);
- cloudQueueByCode(code);
  currentDraftCode=code;
  renderDashboard();
  return rec;
 }
 $('save').onclick=async()=>{
  if(Math.abs(total()-9)>.001)return;
- const r=await saveCurrent('finalizada');
- alert(r.code+' finalizada correctamente.');
- counts={k1:0,k05:0,k025:0};pieces=[];currentDraftCode=null;pinnedLayout=null;$('general').value='';
- update();renderDashboard();show('history');
+ const btn=$('save');btn.disabled=true;btn.textContent='Guardando…';
+ try{
+  const r=await saveCurrent('finalizada');
+  if(!window.TurroneraCloud?.saveRecordNow)throw new Error('Sincronización no disponible');
+  const result=await window.TurroneraCloud.saveRecordNow(r);
+  if(!result.synced){alert(r.code+' quedó guardada en este celular y pendiente de sincronizar. No se borrará el formulario.');renderDashboard();return}
+  alert(r.code+' finalizada y sincronizada correctamente.');
+  counts={k1:0,k05:0,k025:0};pieces=[];currentDraftCode=null;pinnedLayout=null;$('general').value='';
+  update();renderDashboard();show('history');
+ }catch(e){alert('No se pudo confirmar el guardado. Tus cortes siguen aquí; no se ha limpiado el formulario.');renderDashboard()}
+ finally{btn.disabled=false;btn.textContent='Finalizar turronera'}
 };
 $('saveDraft').onclick=async()=>{
  if(!pieces.length){alert('Agrega al menos un corte antes de guardar el avance.');return}
  const r=await saveCurrent('borrador');
+ if(window.TurroneraCloud?.saveRecordNow){try{await window.TurroneraCloud.saveRecordNow(r)}catch(e){cloudQueueByCode(r.code)}}else cloudQueueByCode(r.code);
  alert(r.code+' guardada como avance.');
  renderDashboard();
 };
