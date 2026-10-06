@@ -409,10 +409,10 @@ const hist=()=>{try{const h=JSON.parse(localStorage.getItem(STORE)||'[]');return
 const setHist=x=>{localStorage.setItem(STORE,JSON.stringify(x));localStorage.setItem('tur_v15_cache',JSON.stringify(x));};
 function cloudQueueByCode(code){try{const r=hist().find(x=>x.code===code);if(r&&window.TurroneraCloud)window.TurroneraCloud.queueRecord(r)}catch(e){console.error(e)}}
 
-function saveCurrent(status){
+async function saveCurrent(status){
  const h=hist(),now=new Date().toISOString();
  const idx=currentDraftCode?h.findIndex(r=>r.code===currentDraftCode):-1;
- const seq=idx>=0?(h[idx].seq||1):(h.length?Math.max(...h.map(x=>x.seq||0))+1:1);
+ const seq=idx>=0?(h[idx].seq||1):(window.TurroneraCloud?.isReady()?await window.TurroneraCloud.nextSeq():(h.length?Math.max(...h.map(x=>x.seq||0))+1:1));
  const code=idx>=0?h[idx].code:'TUR-'+String(seq).padStart(4,'0');
  const rec={
    seq,code,
@@ -432,16 +432,16 @@ function saveCurrent(status){
  renderDashboard();
  return rec;
 }
-$('save').onclick=()=>{
+$('save').onclick=async()=>{
  if(Math.abs(total()-9)>.001)return;
- const r=saveCurrent('finalizada');
+ const r=await saveCurrent('finalizada');
  alert(r.code+' finalizada correctamente.');
  counts={k1:0,k05:0,k025:0};pieces=[];currentDraftCode=null;pinnedLayout=null;$('general').value='';
  update();renderDashboard();show('history');
 };
-$('saveDraft').onclick=()=>{
+$('saveDraft').onclick=async()=>{
  if(!pieces.length){alert('Agrega al menos un corte antes de guardar el avance.');return}
- const r=saveCurrent('borrador');
+ const r=await saveCurrent('borrador');
  alert(r.code+' guardada como avance.');
  renderDashboard();
 };
@@ -638,7 +638,7 @@ window.applyRoleUI=function(role){
  const settings=document.querySelector('#settings .dashhero .hint');if(settings&&!admin)settings.textContent='Configuración administrada por el propietario del negocio.';
 };
 
-async function renderTrash(){const box=$('trashList');if(!box||!window.TurroneraCloud?.isAdmin())return;box.innerHTML='<p class="hint">Cargando…</p>';try{const rows=await window.TurroneraCloud.trashList();box.innerHTML=rows.length?rows.map(r=>'<div class="trashRow"><div><b>'+esc(r.code||'Turronera')+'</b><small>Eliminada '+new Date(r.deleted_at).toLocaleString('es-PE')+'</small></div><button class="secondary restoreBtn" data-restore="'+r.id+'">Restaurar</button></div>').join(''):'<p class="hint">La papelera está vacía.</p>';box.querySelectorAll('[data-restore]').forEach(b=>b.onclick=async()=>{if(!confirm('¿Restaurar esta turronera?'))return;await window.TurroneraCloud.restore(b.dataset.restore);await renderTrash();renderDashboard();renderHistory()})}catch(e){box.innerHTML='<p class="hint">No se pudo cargar la papelera.</p>'}}
+async function renderTrash(){const box=$('trashList');if(!box||!window.TurroneraCloud?.isAdmin())return;box.innerHTML='<p class="hint">Cargando…</p>';try{const rows=await window.TurroneraCloud.trashList();box.innerHTML=rows.length?rows.map(r=>'<div class="trashRow"><div><b>'+esc(r.code||'Turronera')+'</b><small>Eliminada '+new Date(r.deleted_at).toLocaleString('es-PE')+'</small></div><button class="secondary restoreBtn" data-restore="'+r.id+'">Restaurar</button></div>').join(''):'<p class="hint">La papelera está vacía.</p>';box.querySelectorAll('[data-restore]').forEach(b=>b.onclick=async()=>{if(!confirm('¿Restaurar esta turronera?'))return;await window.TurroneraCloud.restore(b.dataset.restore);await renderTrash();renderDashboard();renderHistory()});box.querySelectorAll('[data-delete-forever]').forEach(b=>b.onclick=async()=>{if(!confirm('¿Eliminar definitivamente esta turronera? Esta acción no se puede deshacer.'))return;if(!confirm('Confirmación final: se eliminará de la papelera para siempre.'))return;await window.TurroneraCloud.deleteForever(b.dataset.deleteForever);await renderTrash();renderDashboard();renderHistory()})}catch(e){box.innerHTML='<p class="hint">No se pudo cargar la papelera.</p>'}}
 if($('refreshTrash'))$('refreshTrash').onclick=renderTrash;
 
 async function renderAudit(){const box=$('auditList');if(!box||!window.TurroneraCloud?.isReady())return;try{const rows=await window.TurroneraCloud.audit(30);if(!rows.length){box.innerHTML='<p class="hint">Aún no hay actividad registrada.</p>';return}box.innerHTML=rows.map(x=>{const code=x.new_data?.code||x.old_data?.code||'Turronera';const trashed=x.action==='update'&&x.old_data?.deleted_at==null&&x.new_data?.deleted_at;const restored=x.action==='update'&&x.old_data?.deleted_at&&x.new_data?.deleted_at==null;const label=trashed?'Enviada a papelera':restored?'Restaurada':x.action==='insert'?'Creada':x.action==='update'?'Actualizada':x.action==='delete'?'Eliminada':x.action;return '<div class="auditRow"><div><b>'+esc(code)+'</b><small>'+label+' · '+esc(x.actor_name||'Usuario')+'</small></div><time>'+new Date(x.changed_at).toLocaleString('es-PE',{dateStyle:'short',timeStyle:'short'})+'</time></div>'}).join('')}catch(e){box.innerHTML='<p class="hint">No se pudo cargar la actividad.</p>'}}
