@@ -429,6 +429,7 @@ function saveCurrent(status){
  setHist(h);
  cloudQueueByCode(code);
  currentDraftCode=code;
+ renderDashboard();
  return rec;
 }
 $('save').onclick=()=>{
@@ -729,7 +730,5 @@ if(document.readyState==='loading'){
 }
 window.addEventListener('pageshow', refreshResumenSeguro);
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refreshResumenSeguro(); });
-
-if('serviceWorker' in navigator){window.addEventListener('load',async()=>{try{const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.unregister()));const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith('mi-turronera-')).map(k=>caches.delete(k)));console.log('Mi Turronera: cache PWA anterior eliminada');}catch(e){console.error(e)}});}
 
 window.addEventListener('tur-conflict',e=>{alert('⚠️ '+(e.detail?.code||'Esta turronera')+' fue modificada desde otro dispositivo. Ya cargamos la versión más reciente para evitar sobrescribir datos. Revisa y vuelve a aplicar tu cambio.')});
