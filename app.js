@@ -561,15 +561,25 @@ function detail(code){
    <div class="editnotice">El mapa muestra exactamente la distribución que fue guardada.</div>
    <div class="salescard"><div><span>Venta</span><b>${money(st.potential)}</b></div><div><span>Cobrado</span><b>${money(st.paid)}</b></div><div><span>Por cobrar</span><b>${money(st.pending)}</b></div></div>
    <div id="detailBoard" class="board"></div>
-   ${draft?'<button id="resumeFromDetail" class="resumeBtn">Continuar este corte</button>':''}
+   <button id="pdfReportBtn" class="primary">📄 Reporte PDF</button>${draft?'<button id="resumeFromDetail" class="resumeBtn">Continuar este corte</button>':''}
  </div>`;
  if(r.savedLayout&&Object.keys(r.savedLayout).length){
    renderSavedLayout(r.pieces,$('detailBoard'),r.savedLayout,id=>openSavedPiece(code,id));
  }else{
    layout(r.pieces,$('detailBoard'),id=>openSavedPiece(code,id));
  }
- const btn=$('resumeFromDetail');if(btn)btn.onclick=()=>resumeDraft(code);
+ const pdfBtn=$('pdfReportBtn');if(pdfBtn)pdfBtn.onclick=()=>printTurroneraReport(code);const btn=$('resumeFromDetail');if(btn)btn.onclick=()=>resumeDraft(code);
  show('detail',false);
+}
+function printTurroneraReport(code){
+ const r=hist().find(x=>x.code===code);if(!r)return;
+ const ps=(r.pieces||[]).map(normalizePiece),rp=recordPrices(r),st=salesTotals(ps,rp),saved=r.savedLayout||{};
+ const pos=Object.keys(saved).length?saved:(()=>{const m=bestLayout(ps),o={};if(m)ps.forEach(p=>{const q=m.get(p.id);if(q)o[p.id]=q});return o})();
+ const cells=ps.map((p,i)=>{const q=pos[p.id];if(!q)return'';return '<div class="pcell '+p.type+'" style="grid-row:'+(q.r+1)+'/span '+q.h+';grid-column:'+(q.c+1)+'/span '+q.w+'"><b>'+(i+1)+'</b><span>'+L[p.type]+'</span></div>'}).join('');
+ const rows=ps.map((p,i)=>{const price=piecePrice(p,rp),paid=Math.min(piecePaid(p),price),bal=Math.max(0,price-paid);return '<tr><td>'+(i+1)+'</td><td>'+L[p.type]+'</td><td>'+esc(p.client||'—')+'</td><td>'+esc(p.phone||'—')+'</td><td>'+esc(p.deliveryDate||'—')+'</td><td>'+statusName(p.status)+'</td><td>'+money(price)+'</td><td>'+money(paid)+'</td><td>'+money(bal)+'</td><td>'+esc(p.note||'—')+'</td></tr>'}).join('');
+ const dt=r.date?new Date(r.date).toLocaleString('es-PE'):'—';
+ const win=window.open('','_blank');if(!win){alert('Permite ventanas emergentes para generar el PDF.');return}
+ win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+esc(r.code)+' - Reporte</title><style>@page{size:A4;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#2b211d;margin:0}h1{margin:0;font-size:22px}h2{font-size:15px;margin:18px 0 8px}.brand{font-weight:700;color:#713512}.meta{font-size:11px;margin:4px 0 12px}.summary{display:flex;gap:8px;margin:10px 0}.summary div{border:1px solid #ddd;border-radius:8px;padding:7px;flex:1}.summary span{display:block;font-size:9px;color:#666}.summary b{font-size:13px}.pboard{display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(6,28px);border:2px solid #713512;width:100%;max-width:430px;gap:1px;background:#fff}.pcell{border:1px solid #7a6b63;display:flex;align-items:center;justify-content:center;gap:4px;font-size:9px;background:#f7f2ee}.pcell b{font-size:11px}.k05{background:#f4eef8}.k025{background:#eef6f0}table{width:100%;border-collapse:collapse;font-size:7.5px}th,td{border:1px solid #bbb;padding:4px;vertical-align:top}th{background:#f2eee9;font-size:7px}footer{margin-top:10px;font-size:8px;color:#777}.note{font-size:10px;padding:7px;background:#faf7f4;border-radius:6px}</style></head><body><div class="brand">DULCES MOMENTOS</div><h1>Reporte '+esc(r.code)+'</h1><div class="meta">Fecha: '+dt+' · Estado: '+(r.status==='borrador'?'En proceso':'Finalizada')+'</div><div class="summary"><div><span>VENTA</span><b>'+money(st.potential)+'</b></div><div><span>COBRADO</span><b>'+money(st.paid)+'</b></div><div><span>POR COBRAR</span><b>'+money(st.pending)+'</b></div><div><span>CORTES</span><b>'+ps.length+'</b></div></div><h2>Croquis de corte</h2><div class="pboard">'+cells+'</div><h2>Detalle de cortes</h2><table><thead><tr><th>#</th><th>Corte</th><th>Cliente</th><th>Celular</th><th>Entrega</th><th>Estado</th><th>Precio</th><th>Pagado</th><th>Saldo</th><th>Detalle</th></tr></thead><tbody>'+rows+'</tbody></table>'+(r.general?'<h2>Observación general</h2><div class="note">'+esc(r.general)+'</div>':'')+'<footer>Mi Turronera · Dulces Momentos · '+new Date().toLocaleString('es-PE')+'</footer><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>');win.document.close();
 }
 function cleanPhone(phone){
  let n=String(phone||'').replace(/\D/g,'');
