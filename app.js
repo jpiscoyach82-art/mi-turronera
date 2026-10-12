@@ -114,7 +114,7 @@ function bestLayout(ps){
  // Test several scan directions/orientations and keep the one with the cleanest cut geometry.
  for(let mode=0;mode<24;mode++){
   const m=generateCandidate(ps,mode+layoutSeed);if(!m)continue;
-  const sc=scoreLayout(m,ps);
+  const sc=scoreLayout(m,ps)+(layoutSeed?((mode-layoutSeed+24)%24)*500:0);
   if(sc<bestScore){bestScore=sc;best=m}
  }
  return best;
@@ -252,7 +252,7 @@ function update(){
 
 document.querySelectorAll('.sel button').forEach(b=>b.onclick=()=>{pinnedLayout=null;counts[b.dataset.t]=Math.max(0,counts[b.dataset.t]+Number(b.dataset.d));update()});
 $('example').onclick=()=>{pinnedLayout=null;counts={k1:3,k05:6,k025:12};layoutSeed=0;update()};
-$('reorganize').onclick=()=>{pinnedLayout=null;layoutSeed=(layoutSeed+1)%12;layout(pieces,$('board'))};
+$('reorganize').onclick=()=>{pinnedLayout=null;layoutSeed=(layoutSeed+1)%24;layout(pieces,$('board'))};
 function renderMultiState(){const n=multiIds.size;$('multiInfo').style.display=multiMode?'block':'none';$('multiAssign').style.display=multiMode&&n?'inline-flex':'none';$('multiCancel').style.display=multiMode?'inline-flex':'none';$('multiSelect').style.display=multiMode?'none':'inline-flex';$('multiInfo').textContent=n?n+' corte'+(n===1?'':'s')+' seleccionado'+(n===1?'':'s')+'.':'Toca los cortes que pertenecen al mismo cliente.';}
 function endMulti(){multiMode=false;multiIds.clear();renderMultiState();layout(pieces,$('board'))}
 $('multiSelect').onclick=()=>{multiMode=true;multiIds.clear();renderMultiState()};
